@@ -12,20 +12,12 @@ import datetime
 def get_user_email():
     return auth.user.email if auth.user else None
 
-db.define_table('track',
-                Field('artist'),
-                Field('album'),
-                Field('title'),
-                Field('num_plays', 'integer'),
-                Field('created_by', default=get_user_email()),
-                Field('created_on', default=datetime.datetime.utcnow()),
-                )
 
-db.define_table('track_data',
-                Field('track_id', 'reference track'),
-                Field('original_filename'),
-                Field('data_blob', 'blob'),
-                Field('mime_type'),
+
+db.define_table('user_images',
+                Field('created_on', 'datetime', default=request.now),
+                Field('created_by', 'reference auth_user', default=auth.user_id),
+                Field('image_url'),
                 )
 
 # after defining tables, uncomment below to enable auditing

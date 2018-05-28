@@ -5,6 +5,8 @@
 <script src="{{=URL('static', 'js/vue.js')}}"></script>
 <script>
   // Define your URLs here.
+  var my_url = "{{=URL('api', 'my_method')}}";
+  var my_url = "{{=URL('api', 'add_image')}}";
 </script>
 
 
@@ -16,6 +18,8 @@
     <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
 
     <div class="container padded">
+
+      <img v-bind:src="img_url" v-if="img_url"/>
 
       <div class="image_space threequarters">
         <!-- Left part of the page -->
@@ -50,6 +54,9 @@
               <td>Jane Doe</td>
             </tr>
             <!-- Then, one row for each person. -->
+            <tr class="center">
+              <td>Test name</td>
+            </tr>
           </tbody>
         </table>
 
