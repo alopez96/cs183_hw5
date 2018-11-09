@@ -13,12 +13,13 @@ def get_user_email():
     return auth.user.email if auth.user else None
 
 
-
 db.define_table('user_images',
                 Field('created_on', 'datetime', default=request.now),
-                Field('created_by', 'reference auth_user', default=auth.user_id),
+                Field('created_by', default=auth.user_id),
                 Field('image_url'),
+                Field('price','float'),
                 )
+
 
 # after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)

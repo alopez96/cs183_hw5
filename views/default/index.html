@@ -3,10 +3,16 @@
 {{block head}}
 
 <script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script src="https://checkout.stripe.com/checkout.js"></script>
+
 <script>
   // Define your URLs here.
-  var my_url = "{{=URL('api', 'my_method')}}";
-  var my_url = "{{=URL('api', 'add_image')}}";
+  var add_image_url = "{{=URL('api','add_image')}}"
+  var get_users_url = "{{=URL('api','get_users')}}"
+  var specific_images_url = "{{=URL('api','specific_images')}}"
+  var update_price_url = "{{=URL('api','update_price')}}"
+
+   var purchase_url = "{{=URL('default', 'purchase', hmac_key=session.hmac_key)}}"
 </script>
 
 
@@ -18,52 +24,86 @@
     <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
 
     <div class="container padded">
-
-      <img v-bind:src="img_url" v-if="img_url"/>
-
       <div class="image_space threequarters">
         <!-- Left part of the page -->
-        <div v-if="self_page">
+        <div v-if="self_page" v-if="is_checkout">
+          <button class="btn orange" v-on:click="checkout_toggle()">
+            <i class="fa fa-lg fa-shopping-cart"></i> ${cart_size}
+          </button>
           <!-- Code to upload files, with control buttons -->
           <div id="uploader_div" style="display:none">
-            Upload an image file: <input id="file_input" type="file" v-on:change="upload_file" accept="image/jpeg">
+            Upload an image file: <input id="file_input" type="file" accept="image/jpeg">
+            <input type="number" v-if="is_uploading" v-model="image_price" placeholder="enter price">
+            <button v-if="is_uploading" v-on:click="upload_file">submit</button>
           </div>
-
           <button v-if="!is_uploading" v-on:click="open_uploader"><i class="fa fa-plus"></i></button>
           <button v-if="is_uploading"  v-on:click="close_uploader">Cancel</button>
         </div>
-
         <div class="image_container">
           <!-- Put here the code to display the images -->
-
           <ul class="container">
-            <!-- The following is an example
-            <li v-for="image in user_images" class="card lifted padded quarter">
-              <img v-bind:src="image.image_src" height="200px" width="200px" class="padded"/>
-            </li> -->
+            <!-- The following is an example-->
+            <li v-for="image in images" class="card lifted padded half">
+              <input v-model="image.price" type="number" v-on:blur="set_price(image._idx)" />
+              <!-- <button type="button" name="button">$${image.price} index${image.id}</button> -->
+              <img v-bind:src="image.image_url" height="200px" width="200px" class="padded"/>
+              <button class="btn red" v-on:click="buy_product(image._idx)"><i class="fa fa-lg fa-shopping-cart"></i> Buy</button>
+            </li>
           </ul>
         </div>
       </div>
+      <div v-if="is_checkout" class="image_space threequarters">
 
-      <div class="user_space quarter right">
-        <!-- Right part of the page -->
-        <table class="fill" id="user_selector">
-          <tbody>
-            <tr class="center">
-              <!-- This row is you; code for getting your own images, and for setting self_page -->
-              <td>Jane Doe</td>
-            </tr>
-            <!-- Then, one row for each person. -->
-            <tr class="center">
-              <td>Test name</td>
+        <div class="user_space quarter right">
+          <!-- Right part of the page -->
+          <table v-for="user in users" class="fill" id="user_selector">
+            <tbody>
+              <tr class="center">
+                <!-- This row is you; code for getting your own images, and for setting self_page -->
+                <td v-on:click="specific_images(user.user_id)">${user.fName} ${user.lName}</td>
+              </tr>
+              <!-- Then, one row for each person. -->
             </tr>
           </tbody>
         </table>
-
       </div>
-
+    </div>
   </div>
 
+
+  <div v-if="is_checkout" class="container padded">
+    <button class="btn" v-on:click="checkout_toggle()"> Continue shopping </button>
+    <div id="cart_list">
+      <div class="search_div threequarters">
+      </div>
+
+    </div>
+
+    <div id="cart_list">
+      <div v-if="cart.length == 0" class="container">
+        <div class="cart_empty_msg">
+          Your cart is empty
+        </div>
+      </div>
+      <div v-for="product in cart" class="container">
+        <div class="col-md-3 prod_image third">
+          <img v-bind:src="product.image_url" width="100%" class="product_image"/>
+        </div>
+        <div class="col-md-10 product_info twothirds">
+          <div class="product_quantity_price">
+            <span class="product.price">$ ${product.price}</span>
+          </div>
+        </div>
+      </div>
+      <div v-if="cart.length > 0" class="total_price">
+        Your total price: $ ${cart_total}
+        <button class="btn blue" v-on:click="pay()"><i class="fa fa-lg fa-credit-card"></i> Pay</button>
+      </div>
+    </div>
+  </div>
+
+
+  </div>
 </div>
 
 <script src="{{=URL('static', 'js/default_index.js')}}"></script>

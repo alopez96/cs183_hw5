@@ -51,3 +51,31 @@ def call():
     return service()
 
 
+
+
+def purchase():
+    """Ajax function called when a customer orders and pays for the cart."""
+    if not URL.verify(request, hmac_key=session.hmac_key):
+        raise HTTP(500)
+    # Creates the charge.
+    import stripe
+    # Your secret key.
+    stripe.api_key = myconf.get('stripe.private_key')
+    token = json.loads(request.vars.transaction_token)
+    amount = float(request.vars.amount)
+    try:
+        charge = stripe.Charge.create(
+            amount=int(amount * 100),
+            currency="usd",
+            source=token['id'],
+            description="Purchase",
+        )
+    except stripe.error.CardError as e:
+        logger.info("The card has been declined.")
+        logger.info("%r" % traceback.format_exc())
+        return response.json(dict(result="nok"))
+    db.customer_order.insert(
+        customer_info=request.vars.customer_info,
+        transaction_token=json.dumps(token),
+        cart=request.vars.cart)
+    return response.json(dict(result="nok"))
